@@ -1,18 +1,38 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { GUIDELINES } from '../constants/guidelines';
 
 interface RulesDisplayProps {
   satisfiedRules: number[];
 }
 
+// Rough height of the fully-expanded checklist (8 rows + padding), used to
+// decide whether it fits below the badge or needs to flip upward.
+const ESTIMATED_DROPDOWN_HEIGHT = 260;
+
 // Collapsible quality stamp: a compact "x/8 rules passed" badge that expands
 // into a full checklist on click. Collapsed by default so the compliment
 // stays the focal point of the card.
 export function RulesDisplay({ satisfiedRules }: RulesDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const passedCount = satisfiedRules.length;
   const allPassed = passedCount === GUIDELINES.length;
+
+  const handleToggle = () => {
+    setIsExpanded((current) => {
+      const next = !current;
+      if (next && buttonRef.current) {
+        // If there isn't enough room below the badge (e.g. the last card on
+        // a mobile screen), open the checklist upward instead so it never
+        // gets clipped by the viewport edge.
+        const spaceBelow = window.innerHeight - buttonRef.current.getBoundingClientRect().bottom;
+        setOpenUpward(spaceBelow < ESTIMATED_DROPDOWN_HEIGHT);
+      }
+      return next;
+    });
+  };
 
   return (
     // relative + absolute checklist: expanding this card's rules must not
@@ -20,8 +40,9 @@ export function RulesDisplay({ satisfiedRules }: RulesDisplayProps) {
     // every card in the row to stretch to match it.
     <div className="relative">
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setIsExpanded((current) => !current)}
+        onClick={handleToggle}
         aria-expanded={isExpanded}
         className={`inline-flex items-center gap-1.5 min-h-[28px] px-3 py-1 rounded-full text-xs font-semibold transition border cursor-pointer ${
           allPassed
@@ -36,7 +57,11 @@ export function RulesDisplay({ satisfiedRules }: RulesDisplayProps) {
       </button>
 
       {isExpanded && (
-        <ul className="absolute top-full left-0 mt-2 w-64 flex flex-col gap-1.5 rounded-xl bg-white border border-gray-200 shadow-lg p-3 z-20">
+        <ul
+          className={`absolute left-0 w-64 flex flex-col gap-1.5 rounded-xl bg-white border border-gray-200 shadow-lg p-3 z-20 ${
+            openUpward ? 'bottom-full mb-2' : 'top-full mt-2'
+          }`}
+        >
           {GUIDELINES.map((guideline) => {
             const passed = satisfiedRules.includes(guideline.id);
             return (

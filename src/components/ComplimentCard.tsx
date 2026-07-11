@@ -11,6 +11,7 @@ interface ComplimentCardProps {
 
 export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareStateChange }: ComplimentCardProps) {
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [copyFailed, setCopyFailed] = useState(false);
   const [isFlashActive, setIsFlashActive] = useState(false);
   const prevHypeLevelRef = useRef(card.hypeLevel);
 
@@ -24,9 +25,14 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
   }, [card.hypeLevel]);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(card.compliment);
-    onCopyStateChange(card.id, 'copied');
-    setTimeout(() => onCopyStateChange(card.id, 'idle'), 2000);
+    try {
+      await navigator.clipboard.writeText(card.compliment);
+      onCopyStateChange(card.id, 'copied');
+      setTimeout(() => onCopyStateChange(card.id, 'idle'), 2000);
+    } catch {
+      setCopyFailed(true);
+      setTimeout(() => setCopyFailed(false), 2000);
+    }
   };
 
   const handleShare = async () => {
@@ -39,13 +45,18 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
       return;
     }
     // Desktop fallback: copy to clipboard with distinct "share" messaging.
-    await navigator.clipboard.writeText(card.compliment);
-    onShareStateChange(card.id, 'shared');
-    setShareFeedback('Copied to share!');
-    setTimeout(() => {
-      onShareStateChange(card.id, 'idle');
-      setShareFeedback(null);
-    }, 2000);
+    try {
+      await navigator.clipboard.writeText(card.compliment);
+      onShareStateChange(card.id, 'shared');
+      setShareFeedback('✅ Copied to share!');
+      setTimeout(() => {
+        onShareStateChange(card.id, 'idle');
+        setShareFeedback(null);
+      }, 2000);
+    } catch {
+      setShareFeedback('⚠️ Failed to copy');
+      setTimeout(() => setShareFeedback(null), 2000);
+    }
   };
 
   return (
@@ -90,13 +101,13 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
             onClick={handleCopy}
             className="flex-1 min-h-[40px] flex items-center justify-center gap-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 active:scale-95 transition"
           >
-            {card.copyState === 'copied' ? '✅ Copied!' : '📋 Copy'}
+            {copyFailed ? '⚠️ Failed to copy' : card.copyState === 'copied' ? '✅ Copied!' : '📋 Copy'}
           </button>
           <button
             onClick={handleShare}
             className="flex-1 min-h-[40px] flex items-center justify-center gap-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 active:scale-95 transition"
           >
-            {shareFeedback ? '✅ Copied!' : '📤 Share'}
+            {shareFeedback ?? '📤 Share'}
           </button>
         </div>
         <button
