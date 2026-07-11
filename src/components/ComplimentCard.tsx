@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CardState } from '../types';
 import { RulesDisplay } from './RulesDisplay';
+import { generateComplimentImage } from '../utils/shareImage';
 
 interface ComplimentCardProps {
   card: CardState;
@@ -35,20 +36,28 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
     }
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: card.compliment, title: 'HypeBot Compliment' });
-      } catch {
-        // User cancelled the share sheet — no error state needed.
-      }
-      return;
-    }
-    // Desktop fallback: copy to clipboard with distinct "share" messaging.
+  // Desktop fallback: download the image (if we made one) and copy the text
+  // to clipboard, with feedback that reflects what actually happened.
+  const shareViaClipboard = async (imageFile: File | null) => {
     try {
-      await navigator.clipboard.writeText(card.compliment);
-      onShareStateChange(card.id, 'shared');
-      setShareFeedback('✅ Copied to share!');
+      if (imageFile) {
+        const url = URL.createObjectURL(imageFile);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'hypebot-compliment.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        await navigator.clipboard.writeText(card.compliment);
+        onShareStateChange(card.id, 'shared');
+        setShareFeedback('✅ Image downloaded & text copied!');
+      } else {
+        await navigator.clipboard.writeText(card.compliment);
+        onShareStateChange(card.id, 'shared');
+        setShareFeedback('✅ Copied to share!');
+      }
       setTimeout(() => {
         onShareStateChange(card.id, 'idle');
         setShareFeedback(null);
@@ -57,6 +66,43 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
       setShareFeedback('⚠️ Failed to copy');
       setTimeout(() => setShareFeedback(null), 2000);
     }
+  };
+
+  const handleShare = async () => {
+    // Render the branded image off-screen. If canvas rendering fails for any
+    // reason, imageFile stays null and every path below falls back to the
+    // original text-only share/copy behavior.
+    let imageFile: File | null = null;
+    try {
+      const blob = await generateComplimentImage(card.compliment);
+      imageFile = new File([blob], 'hypebot-compliment.png', { type: 'image/png' });
+    } catch {
+      imageFile = null;
+    }
+
+    // navigator.share exists on desktop Chrome too, but it frequently fails
+    // silently there (no share targets registered). Touch capability is a
+    // much more reliable signal that we're actually on a mobile device.
+    const isMobileShare = Boolean(navigator.share) && 'ontouchstart' in window;
+
+    if (isMobileShare) {
+      try {
+        if (imageFile && navigator.canShare?.({ files: [imageFile] })) {
+          await navigator.share({ text: card.compliment, files: [imageFile], title: 'HypeBot Compliment' });
+        } else {
+          await navigator.share({ text: card.compliment, title: 'HypeBot Compliment' });
+        }
+        return;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          return; // User cancelled the share sheet — no error state needed.
+        }
+        // Any other failure falls through to the clipboard fallback below
+        // instead of leaving the user with no feedback at all.
+      }
+    }
+
+    await shareViaClipboard(imageFile);
   };
 
   return (
