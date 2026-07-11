@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #F8F7FF;
+  color: #1F2937;
+}
+
+@keyframes border-flash {
+  0%, 100% {
+    border-left-color: #7C3AED;
+  }
+  50% {
+    border-left-color: #A78BFA;
+  }
+}
+
+.animate-border-flash {
+  animation: border-flash 300ms ease-in-out;
+}
+
