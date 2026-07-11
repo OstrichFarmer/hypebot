@@ -1,13 +1,13 @@
-import { useRef, useState } from 'react';
-import type { CardState } from './types';
-import { generateInitialCompliments, escalateCompliment } from './utils/gemini';
-import { validateCompliment, mergeRulesApplied } from './utils/validation';
-import { ComplimentCard } from './components/ComplimentCard';
-import { LoadingState } from './components/LoadingState';
-import { ErrorMessage } from './components/ErrorMessage';
+import { useRef, useState } from "react";
+import type { CardState } from "./types";
+import { generateInitialCompliments, escalateCompliment } from "./utils/gemini";
+import { validateCompliment, mergeRulesApplied } from "./utils/validation";
+import { ComplimentCard } from "./components/ComplimentCard";
+import { LoadingState } from "./components/LoadingState";
+import { ErrorMessage } from "./components/ErrorMessage";
 
 function App() {
-  const [subject, setSubject] = useState('');
+  const [subject, setSubject] = useState("");
   const [cards, setCards] = useState<CardState[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   // API failures (shown as the retryable error card) are kept separate from
@@ -21,7 +21,8 @@ function App() {
     setIsGenerating(true);
     setGenerationError(null);
     try {
-      const { results, historyPerCard } = await generateInitialCompliments(subjectToUse);
+      const { results, historyPerCard } =
+        await generateInitialCompliments(subjectToUse);
       const newCards: CardState[] = results.map((result, index) => {
         const validation = validateCompliment(result.compliment);
         return {
@@ -33,13 +34,15 @@ function App() {
           history: historyPerCard[index],
           isEscalating: false,
           escalationError: null,
-          copyState: 'idle',
-          shareState: 'idle',
+          copyState: "idle",
+          shareState: "idle",
         };
       });
       setCards(newCards);
     } catch (error) {
-      setGenerationError(error instanceof Error ? error.message : 'Something went wrong.');
+      setGenerationError(
+        error instanceof Error ? error.message : "Something went wrong.",
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -49,7 +52,7 @@ function App() {
     event.preventDefault();
     const trimmed = subject.trim();
     if (!trimmed) {
-      setValidationError('Give HypeBot someone to hype up first! ✨');
+      setValidationError("Give HypeBot someone to hype up first! ✨");
       return;
     }
     setValidationError(null);
@@ -58,7 +61,7 @@ function App() {
 
   const handleTryAnother = () => {
     setCards([]);
-    setSubject('');
+    setSubject("");
     setGenerationError(null);
     setValidationError(null);
   };
@@ -74,7 +77,11 @@ function App() {
   // flips, so the other cards remain fully interactive while it loads.
   const handleEscalate = async (id: string) => {
     setCards((current) =>
-      current.map((card) => (card.id === id ? { ...card, isEscalating: true, escalationError: null } : card)),
+      current.map((card) =>
+        card.id === id
+          ? { ...card, isEscalating: true, escalationError: null }
+          : card,
+      ),
     );
 
     const target = cards.find((card) => card.id === id);
@@ -89,7 +96,10 @@ function App() {
             ? {
                 ...card,
                 compliment: result.compliment,
-                modelRulesApplied: mergeRulesApplied(result.rulesApplied, validation),
+                modelRulesApplied: mergeRulesApplied(
+                  result.rulesApplied,
+                  validation,
+                ),
                 validation,
                 hypeLevel: card.hypeLevel + 1,
                 history: newHistory,
@@ -105,7 +115,10 @@ function App() {
             ? {
                 ...card,
                 isEscalating: false,
-                escalationError: error instanceof Error ? error.message : 'Escalation failed. Try again?',
+                escalationError:
+                  error instanceof Error
+                    ? error.message
+                    : "Escalation failed. Try again?",
               }
             : card,
         ),
@@ -113,12 +126,20 @@ function App() {
     }
   };
 
-  const handleCopyStateChange = (id: string, state: 'idle' | 'copied') => {
-    setCards((current) => current.map((card) => (card.id === id ? { ...card, copyState: state } : card)));
+  const handleCopyStateChange = (id: string, state: "idle" | "copied") => {
+    setCards((current) =>
+      current.map((card) =>
+        card.id === id ? { ...card, copyState: state } : card,
+      ),
+    );
   };
 
-  const handleShareStateChange = (id: string, state: 'idle' | 'shared') => {
-    setCards((current) => current.map((card) => (card.id === id ? { ...card, shareState: state } : card)));
+  const handleShareStateChange = (id: string, state: "idle" | "shared") => {
+    setCards((current) =>
+      current.map((card) =>
+        card.id === id ? { ...card, shareState: state } : card,
+      ),
+    );
   };
 
   return (
@@ -130,7 +151,9 @@ function App() {
             <h1 className="text-4xl sm:text-5xl font-[800] text-[#7C3AED]">
               HypeBot 🎉
             </h1>
-            <p className="text-[#6B7280] text-base font-normal">Absurdly over-the-top compliments, on demand.</p>
+            <p className="text-[#6B7280] text-base font-normal">
+              Absurdly over-the-top compliments, on demand.
+            </p>
           </header>
 
           <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
@@ -145,17 +168,23 @@ function App() {
               placeholder="e.g. Customer Success Manager, or 'my coworker who always fixes the coffee machine'"
               className="w-full min-h-[56px] rounded-xl border border-gray-300 px-4 py-4 text-base text-[#1F2937] placeholder-gray-400 focus:outline-none focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/20 bg-white shadow-sm transition"
             />
-            {validationError && <p className="text-sm font-normal text-[#EF4444] px-1">{validationError}</p>}
+            {validationError && (
+              <p className="text-sm font-normal text-[#EF4444] px-1">
+                {validationError}
+              </p>
+            )}
             <button
               type="submit"
               disabled={isGenerating}
               className="w-full min-h-[56px] rounded-xl bg-[#7C3AED] text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition duration-150 disabled:opacity-60"
             >
-              {isGenerating ? 'Hyping...' : 'Hype Me Up! 🚀'}
+              {isGenerating ? "Hyping..." : "Hype Them Up! 🚀"}
             </button>
           </form>
 
-          {generationError && !isGenerating && <ErrorMessage message={generationError} onRetry={handleRetry} />}
+          {generationError && !isGenerating && (
+            <ErrorMessage message={generationError} onRetry={handleRetry} />
+          )}
         </div>
 
         {/* Results widen to a 3-column grid on desktop (>=768px) so all three
