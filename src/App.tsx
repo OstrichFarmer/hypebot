@@ -36,7 +36,6 @@ function App() {
           isEscalating: false,
           escalationError: null,
           copyState: "idle",
-          shareState: "idle",
         };
       });
       setCards(newCards);
@@ -141,14 +140,6 @@ function App() {
     );
   };
 
-  const handleShareStateChange = (id: string, state: "idle" | "shared") => {
-    setCards((current) =>
-      current.map((card) =>
-        card.id === id ? { ...card, shareState: state } : card,
-      ),
-    );
-  };
-
   return (
     <div className="min-h-svh bg-[#F8F7FF] py-12">
       <div className="max-w-[1200px] mx-auto px-6 flex flex-col gap-10">
@@ -208,7 +199,6 @@ function App() {
                     card={card}
                     onEscalate={handleEscalate}
                     onCopyStateChange={handleCopyStateChange}
-                    onShareStateChange={handleShareStateChange}
                   />
                 ))}
               </div>
