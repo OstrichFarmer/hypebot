@@ -14,12 +14,17 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState(false);
   const [isFlashActive, setIsFlashActive] = useState(false);
+  const [isWobbleActive, setIsWobbleActive] = useState(false);
   const prevHypeLevelRef = useRef(card.hypeLevel);
 
   useEffect(() => {
     if (card.hypeLevel > prevHypeLevelRef.current) {
       setIsFlashActive(true);
-      const timer = setTimeout(() => setIsFlashActive(false), 300);
+      setIsWobbleActive(true);
+      const timer = setTimeout(() => {
+        setIsFlashActive(false);
+        setIsWobbleActive(false);
+      }, 300);
       prevHypeLevelRef.current = card.hypeLevel;
       return () => clearTimeout(timer);
     }
@@ -109,7 +114,7 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
     <div
       className={`w-full flex flex-col rounded-2xl bg-white border border-gray-200 border-l-4 border-l-[#7C3AED] shadow-sm p-6 gap-5 transition ${
         isFlashActive ? 'animate-border-flash' : ''
-      }`}
+      } ${isWobbleActive ? 'animate-card-wobble' : ''}`}
     >
       <div className="flex items-center justify-between w-full">
         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-[#7C3AED] text-white">
