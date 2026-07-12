@@ -7,10 +7,9 @@ interface ComplimentCardProps {
   card: CardState;
   onEscalate: (id: string) => void;
   onCopyStateChange: (id: string, state: 'idle' | 'copied') => void;
-  onShareStateChange: (id: string, state: 'idle' | 'shared') => void;
 }
 
-export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareStateChange }: ComplimentCardProps) {
+export function ComplimentCard({ card, onEscalate, onCopyStateChange }: ComplimentCardProps) {
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [copyFailed, setCopyFailed] = useState(false);
   const [isFlashActive, setIsFlashActive] = useState(false);
@@ -56,17 +55,12 @@ export function ComplimentCard({ card, onEscalate, onCopyStateChange, onShareSta
         URL.revokeObjectURL(url);
 
         await navigator.clipboard.writeText(card.compliment);
-        onShareStateChange(card.id, 'shared');
         setShareFeedback('✅ Image downloaded & text copied!');
       } else {
         await navigator.clipboard.writeText(card.compliment);
-        onShareStateChange(card.id, 'shared');
         setShareFeedback('✅ Copied to share!');
       }
-      setTimeout(() => {
-        onShareStateChange(card.id, 'idle');
-        setShareFeedback(null);
-      }, 2000);
+      setTimeout(() => setShareFeedback(null), 2000);
     } catch {
       setShareFeedback('⚠️ Failed to copy');
       setTimeout(() => setShareFeedback(null), 2000);
