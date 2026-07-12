@@ -24,3 +24,20 @@ body {
   animation: border-flash 300ms ease-in-out;
 }
 
+@keyframes card-wobble {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-1deg);
+  }
+  75% {
+    transform: rotate(1deg);
+  }
+}
+
+.animate-card-wobble {
+  animation: card-wobble 300ms ease-in-out;
+}
+
+
