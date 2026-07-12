@@ -35,5 +35,4 @@ export interface CardState {
   isEscalating: boolean;
   escalationError: string | null;
   copyState: 'idle' | 'copied';
-  shareState: 'idle' | 'shared';
 }
