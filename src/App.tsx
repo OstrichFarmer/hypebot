@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import confetti from "canvas-confetti";
 import type { CardState } from "./types";
 import { generateInitialCompliments, escalateCompliment } from "./utils/gemini";
 import { validateCompliment, mergeRulesApplied } from "./utils/validation";
@@ -39,6 +40,12 @@ function App() {
         };
       });
       setCards(newCards);
+      confetti({
+        particleCount: 90,
+        spread: 70,
+        decay: 0.9,
+        origin: { y: 0.5 },
+      });
     } catch (error) {
       setGenerationError(
         error instanceof Error ? error.message : "Something went wrong.",
